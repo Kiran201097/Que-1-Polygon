@@ -1,0 +1,123 @@
+#include <iostream>
+using namespace std;
+float MAX(float , float );
+float MIN(float , float );
+bool Check_on_Segment(float*, float*, float*);
+int Check_orientation(float*, float*, float*);
+bool Check_inside(float**, float* );
+int number_of_vertices;
+
+int main()
+{
+	float P[2];
+	cout << "Enter the number of coordinates:";
+	cin >> number_of_vertices;
+	if (number_of_vertices < 3)
+		return 1;
+	//Initialisation of 2-D Array
+	float** Polygon = new float* [number_of_vertices];
+	for (int i = 0; i < number_of_vertices; i++)
+		Polygon[i] = new float[2];
+	
+	for (int i = 0; i <number_of_vertices; i++)
+	{
+		for (int j = 0; j < 2; j++)
+			cin >> Polygon[i][j]; //Input to the array
+	}
+	for (int i = 0; i < 2; i++)
+		cin >> P[i];
+	//Check the point P is inside or outside
+	//True if inside and False if outside
+	if (Check_inside(Polygon,P))
+		cout << "True";
+	else
+		cout << "False";
+	//free the 2-D array
+	for (int i = 0; i < number_of_vertices; i++)
+		delete[] Polygon[i];
+	
+	delete[] Polygon;
+	return 0;
+}
+float MAX(float x, float y)
+{
+	if (x > y)
+		return x;
+	else
+		return y;
+}
+float MIN(float x, float y)
+{
+	if (x < y)
+		return x;
+	else
+		return y;
+}
+
+bool Check_on_Segment(float* x, float* y, float* z)
+{
+	if (y[0] <= MAX(x[0], z[0]) && y[0] >= MIN(x[0], z[0]) &&
+		y[1] <= MAX(x[1], z[1]) && y[1] >= MIN(x[1], z[1]))
+		return true;
+	return false;
+}
+
+int Check_orientation(float* x, float* y, float* z)
+{
+	int value = (y[1] - x[1]) * (z[0] - y[0]) -
+		(y[0] - x[0]) * (z[1] - y[1]);
+	if (value == 0) // return 0 if x, y, z are collinear
+		return 0;
+	if (value > 0) //return 1 if clockwise or 2 if anti-clockwise
+		return 1;
+	else
+		return 2;
+}
+
+bool Intersect(float* x1, float* y1, float* x2, float* y2)
+{
+	int o1 = Check_orientation(x1, y1, x2);
+	int o2 = Check_orientation(x1, y1, y2);
+	int o3 = Check_orientation(x2, y2, x1);
+	int o4 = Check_orientation(x2, y2, y1);
+
+	if (o1 != o2 && o3 != o4)
+		return true;
+
+	if (o1 == 0 && Check_on_Segment(x1, x2, y1))
+		return true;
+
+	if (o2 == 0 && Check_on_Segment(x1, y2, y1))
+		return true;
+
+	if (o3 == 0 && Check_on_Segment(x2, x1, y2))
+		return true;
+
+	if (o4 == 0 && Check_on_Segment(x2, y1, y2))
+		return true;
+	return false;
+}
+
+bool Check_inside(float** polygon, float* p)
+{
+	//point to infinity for line segment from p 
+	float extreme[2] = { INT_MAX, p[1] };
+	int count = 0;  //count the intersections of line to side
+	for (int i = 0; i < number_of_vertices - 1; i++)
+	{
+		if (p[0] == polygon[i][0] && p[1] == polygon[i][1])
+			return true;
+		if (Intersect(polygon[i], polygon[i + 1], p, extreme))
+			count++;
+	}
+
+	if (p[0] == polygon[number_of_vertices - 1][0] && p[1] == polygon[number_of_vertices - 1][1])
+		return true;
+	if (Intersect(polygon[number_of_vertices - 1], polygon[0], p, extreme))
+		count++;
+	//returns true if point p is inside or false if outside
+	if (count % 2 == 1)
+		return false;
+	else
+		return true;
+}
